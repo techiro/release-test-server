@@ -38,6 +38,8 @@ sequenceDiagram
 
 1. 開発者が `techiro/release-test-server` リポジトリの `release-server.md` ファイルを更新します
 2. 変更が main ブランチにプッシュされると、GitHub Actions の `sync-to-release-test.yml` ワークフローが実行されます
+   - または、開発者が手動でワークフローをトリガーすることもできます（`workflow_dispatch`）
+   - 手動トリガーの場合、更新内容のメモ、日付、時刻を追加するオプションがあります
 3. このワークフローは `techiro/release-test` リポジトリに repository_dispatch イベントを送信します
 4. `techiro/release-test` リポジトリでは `receive-server-updates.yml` ワークフローが実行されます
 5. このワークフローは `make sync server-release` コマンドを実行して、最新の `release-server.md` ファイルを取得します
