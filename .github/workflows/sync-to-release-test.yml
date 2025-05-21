@@ -11,10 +11,19 @@ jobs:
   notify-main-repo:
     runs-on: ubuntu-latest
     steps:
+      - name: GitHub App トークンの生成
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: techiro
+          repositories: release-test,release-test-server
+      
       - name: repository_dispatchイベントをトリガー
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           repository: techiro/release-test
           event-type: server-release-updated
           client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'

@@ -1,8 +1,8 @@
-name: サーバー更新を受信
+name: サーバー更新を受信 (レガシー)
 
 on:
   repository_dispatch:
-    types: [server-release-updated]
+    types: [legacy-server-release-updated]
 
 jobs:
   sync-and-create-pr:

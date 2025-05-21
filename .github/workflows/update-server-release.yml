@@ -1,0 +1,119 @@
+name: サーバーリリース更新ワークフロー
+
+on:
+  repository_dispatch:
+    types: [server-release-updated]
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: '更新用ブランチ名'
+        default: 'chore-update-server-release'
+        required: true
+
+jobs:
+  update-server-release:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 認証と初期設定
+      - name: GitHub App トークンの生成
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: techiro
+          repositories: release-test,release-test-server
+
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v3
+        with:
+          repository: techiro/release-test
+          path: source
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: ブランチ名の設定
+        id: set-branch-name
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "BRANCH_NAME=${{ github.event.inputs.branch_name }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=chore-update-server-release" >> $GITHUB_ENV
+          fi
+
+      # 2. 古いブランチとプルリクエストの整理
+      - name: 既存のプルリクエストのクローズ
+        run: |
+          PR_NUMBERS=$(curl -s -H "Authorization: token ${{ steps.generate-token.outputs.token }}" \
+            "https://api.github.com/repos/techiro/release-test/pulls?state=open" | \
+            jq -r '.[] | select(.head.ref == "${{ env.BRANCH_NAME }}") | .number')
+          
+          for PR_NUMBER in $PR_NUMBERS; do
+            curl -X PATCH -H "Authorization: token ${{ steps.generate-token.outputs.token }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d '{"state":"closed", "body":"自動的にクローズされました。新しいPRが作成されます。"}' \
+              "https://api.github.com/repos/techiro/release-test/pulls/$PR_NUMBER"
+          done
+        continue-on-error: true
+
+      - name: 既存のブランチの削除
+        run: |
+          BRANCH_EXISTS=$(curl -s -H "Authorization: token ${{ steps.generate-token.outputs.token }}" \
+            "https://api.github.com/repos/techiro/release-test/branches/${{ env.BRANCH_NAME }}" | \
+            jq -r '.name')
+          
+          if [ "$BRANCH_EXISTS" == "${{ env.BRANCH_NAME }}" ]; then
+            curl -X DELETE -H "Authorization: token ${{ steps.generate-token.outputs.token }}" \
+              "https://api.github.com/repos/techiro/release-test/git/refs/heads/${{ env.BRANCH_NAME }}"
+          fi
+        continue-on-error: true
+
+      # 3. サーバーリポジトリの操作
+      - name: サーバーリポジトリのチェックアウト
+        uses: actions/checkout@v3
+        with:
+          repository: techiro/release-test-server
+          path: server
+          token: ${{ steps.generate-token.outputs.token }}
+
+      # 4. 生成コードの反映と整備
+      - name: サーバーリリース情報の同期
+        run: |
+          cd source
+          
+          # 新しいブランチを作成
+          git checkout -b ${{ env.BRANCH_NAME }}
+          
+          # サーバーリポジトリからrelease-server.mdをコピー
+          cp ../server/release-server.md ./release-server.md
+          
+          # 変更があるか確認
+          if [[ -n "$(git status --porcelain)" ]]; then
+            # Gitの設定
+            git config user.name "GitHub Actions Bot"
+            git config user.email "actions@github.com"
+            
+            # 変更をコミット
+            git add release-server.md
+            git commit -m "サーバーリリース情報を更新"
+            
+            # 変更をプッシュ
+            git push origin ${{ env.BRANCH_NAME }}
+            
+            echo "CHANGES_MADE=true" >> $GITHUB_ENV
+          else
+            echo "CHANGES_MADE=false" >> $GITHUB_ENV
+          fi
+
+      # 5. プルリクエストの作成
+      - name: プルリクエストの作成
+        if: env.CHANGES_MADE == 'true'
+        run: |
+          curl -X POST -H "Authorization: token ${{ steps.generate-token.outputs.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{
+              "title": "サーバーリリース情報を更新",
+              "body": "このPRは、techiro/release-test-serverリポジトリからのサーバーリリース情報を更新します。\n\ntechiro/release-test-serverの変更によってトリガーされました。",
+              "head": "${{ env.BRANCH_NAME }}",
+              "base": "main"
+            }' \
+            "https://api.github.com/repos/techiro/release-test/pulls"
