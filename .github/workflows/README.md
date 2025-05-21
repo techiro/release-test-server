@@ -1,29 +1,29 @@
-# GitHub Actions Workflows
+# GitHub Actions ワークフロー
 
-This directory contains GitHub Actions workflows for syncing content between repositories.
+このディレクトリには、リポジトリ間でコンテンツを同期するための GitHub Actions ワークフローが含まれています。
 
-## Workflow Files
+## ワークフローファイル
 
 ### 1. `sync-to-release-test.yml`
 
-This workflow is triggered when changes are made to the `release-server.md` file in the `techiro/release-test-server` repository. It sends a repository_dispatch event to the `techiro/release-test` repository.
+このワークフローは、`techiro/release-test-server` リポジトリの `release-server.md` ファイルに変更が加えられたときにトリガーされます。`techiro/release-test` リポジトリに repository_dispatch イベントを送信します。
 
-**Requirements:**
-- A secret named `REPO_ACCESS_TOKEN` must be set in the repository settings with a GitHub personal access token that has the `repo` scope and access to both repositories.
+**要件:**
+- リポジトリ設定に `REPO_ACCESS_TOKEN` という名前のシークレットを設定する必要があります。このトークンは、`repo` スコープを持ち、両方のリポジトリにアクセスできる GitHub パーソナルアクセストークンである必要があります。
 
-### 2. `receive-server-updates.yml` (to be placed in techiro/release-test repository)
+### 2. `receive-server-updates.yml` (techiro/release-test リポジトリに配置する必要があります)
 
-This workflow is triggered by the repository_dispatch event from the `techiro/release-test-server` repository. It:
-1. Runs the `make sync server-release` command
-2. Commits any changes to the `release-server.md` file
-3. Creates a pull request with these changes
+このワークフローは、`techiro/release-test-server` リポジトリからの repository_dispatch イベントによってトリガーされます。以下の処理を行います:
+1. `make sync server-release` コマンドを実行します
+2. `release-server.md` ファイルへの変更をコミットします
+3. これらの変更を含むプルリクエストを作成します
 
-**Requirements:**
-- The repository must have a Makefile with a `sync server-release` target that fetches the latest `release-server.md` from the server repository.
-- GitHub Actions must have permission to create branches and pull requests.
+**要件:**
+- リポジトリには、サーバーリポジトリから最新の `release-server.md` を取得する `sync server-release` ターゲットを持つ Makefile が必要です。
+- GitHub Actions がブランチとプルリクエストを作成する権限を持っている必要があります。
 
-## Setup Instructions
+## セットアップ手順
 
-1. Add the `REPO_ACCESS_TOKEN` secret to the `techiro/release-test-server` repository settings.
-2. Place the `receive-server-updates.yml` file in the `.github/workflows` directory of the `techiro/release-test` repository.
-3. Ensure the `techiro/release-test` repository has a Makefile with the appropriate sync command.
+1. `techiro/release-test-server` リポジトリの設定に `REPO_ACCESS_TOKEN` シークレットを追加します。
+2. `receive-server-updates.yml` ファイルを `techiro/release-test` リポジトリの `.github/workflows` ディレクトリに配置します。
+3. `techiro/release-test` リポジトリに適切な同期コマンドを持つ Makefile があることを確認します。

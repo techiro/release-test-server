@@ -1,4 +1,4 @@
-name: Receive Server Updates
+name: サーバー更新を受信
 
 on:
   repository_dispatch:
@@ -8,18 +8,18 @@ jobs:
   sync-and-create-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: リポジトリをチェックアウト
         uses: actions/checkout@v3
 
-      - name: Set up Git
+      - name: Gitを設定
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-      - name: Run sync command
+      - name: 同期コマンドを実行
         run: make sync server-release
 
-      - name: Check for changes
+      - name: 変更を確認
         id: check_changes
         run: |
           if [[ -n "$(git status --porcelain release-server.md)" ]]; then
@@ -28,32 +28,32 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create branch and commit changes
+      - name: ブランチを作成して変更をコミット
         if: steps.check_changes.outputs.changes == 'true'
         run: |
-          # Create a new branch with timestamp
+          # タイムスタンプ付きの新しいブランチを作成
           BRANCH_NAME="update-server-release-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
           
-          # Add and commit changes
+          # 変更を追加してコミット
           git add release-server.md
-          git commit -m "Update server release information"
+          git commit -m "サーバーリリース情報を更新"
           
-          # Push to the new branch
+          # 新しいブランチにプッシュ
           git push origin $BRANCH_NAME
           
-          # Save branch name for PR creation
+          # PR作成用にブランチ名を保存
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
-      - name: Create Pull Request
+      - name: プルリクエストを作成
         if: steps.check_changes.outputs.changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "Update server release information"
+          title: "サーバーリリース情報を更新"
           body: |
-            This PR updates the server release information from the techiro/release-test-server repository.
+            このPRは、techiro/release-test-serverリポジトリからのサーバーリリース情報を更新します。
             
-            Triggered by changes in techiro/release-test-server.
+            techiro/release-test-serverの変更によってトリガーされました。
           branch: ${{ env.BRANCH_NAME }}
           base: main

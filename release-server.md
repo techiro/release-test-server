@@ -1,3 +1,3 @@
-# Release Server
+# リリースサーバー
 
-This is a placeholder file for the release-server.md that will be synced between repositories.
+これは、リポジトリ間で同期される release-server.md のプレースホルダーファイルです。
