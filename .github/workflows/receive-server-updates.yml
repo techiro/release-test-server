@@ -1,0 +1,59 @@
+name: Receive Server Updates
+
+on:
+  repository_dispatch:
+    types: [server-release-updated]
+
+jobs:
+  sync-and-create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      - name: Run sync command
+        run: make sync server-release
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n "$(git status --porcelain release-server.md)" ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch and commit changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          # Create a new branch with timestamp
+          BRANCH_NAME="update-server-release-$(date +%Y%m%d%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          
+          # Add and commit changes
+          git add release-server.md
+          git commit -m "Update server release information"
+          
+          # Push to the new branch
+          git push origin $BRANCH_NAME
+          
+          # Save branch name for PR creation
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Update server release information"
+          body: |
+            This PR updates the server release information from the techiro/release-test-server repository.
+            
+            Triggered by changes in techiro/release-test-server.
+          branch: ${{ env.BRANCH_NAME }}
+          base: main

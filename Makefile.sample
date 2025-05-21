@@ -1,0 +1,16 @@
+# Sample Makefile for techiro/release-test repository
+
+.PHONY: sync server-release
+
+# Sync server release information
+sync:
+	@echo "Syncing repository resources..."
+
+# Fetch the latest release-server.md from the server repository
+server-release:
+	@echo "Fetching server release information..."
+	curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+		-H "Accept: application/vnd.github.v3.raw" \
+		-o release-server.md \
+		https://api.github.com/repos/techiro/release-test-server/contents/release-server.md
+	@echo "Server release information updated."
