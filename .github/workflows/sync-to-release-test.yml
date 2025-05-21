@@ -7,11 +7,53 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      update_note:
+        description: '更新内容のメモ'
+        required: false
+        default: 'Updated'
+        type: string
+      add_date:
+        description: '更新日を追加'
+        required: false
+        default: true
+        type: boolean
+      add_time:
+        description: '更新時刻を追加'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   notify-main-repo:
     runs-on: ubuntu-latest
     steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v3
+        if: github.event_name == 'workflow_dispatch'
+      
+      - name: ファイルを更新
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # ファイル末尾に更新情報を追加
+          echo "" >> release-server.md
+          echo "## ${{ github.event.inputs.update_note || 'Updated' }}" >> release-server.md
+          
+          if [ "${{ github.event.inputs.add_date }}" = "true" ]; then
+            echo "- 更新日: $(date +%Y年%m月%d日)" >> release-server.md
+          fi
+          
+          if [ "${{ github.event.inputs.add_time }}" = "true" ]; then
+            echo "- 更新時刻: $(date +%H:%M:%S)" >> release-server.md
+          fi
+          
+          # 変更をコミット
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add release-server.md
+          git commit -m "手動トリガーによる更新"
+          git push
+      
       - name: GitHub App トークンの生成
         id: generate-token
         uses: actions/create-github-app-token@v1
