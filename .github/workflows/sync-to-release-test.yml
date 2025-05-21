@@ -24,6 +24,11 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   notify-main-repo:
     runs-on: ubuntu-latest
