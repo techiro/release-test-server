@@ -59,19 +59,10 @@ jobs:
           git commit -m "手動トリガーによる更新"
           git push
 
-      - name: GitHub App トークンの生成
-        id: generate-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.RELEASE_TEST_APP_ID }}
-          private-key: ${{ secrets.RELEASE_TEST_PRIVATE_KEY }}
-          owner: techiro
-          repositories: "release-test,release-test-server"
-
       - name: repository_dispatchイベントをトリガー
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: techiro/release-test
           event-type: server-release-updated
           client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
@@ -79,7 +70,7 @@ jobs:
       - name: repository_dispatchイベントをトリガー(server)
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: techiro/release-test-server
           event-type: server-release-updated
           client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
