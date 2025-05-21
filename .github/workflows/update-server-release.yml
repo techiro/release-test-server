@@ -7,7 +7,7 @@ on:
     inputs:
       branch_name:
         description: '更新用ブランチ名'
-        default: 'chore-update-server-release'
+        default: 'chore-update-proto'
         required: true
 
 jobs:
@@ -37,7 +37,7 @@ jobs:
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "BRANCH_NAME=${{ github.event.inputs.branch_name }}" >> $GITHUB_ENV
           else
-            echo "BRANCH_NAME=chore-update-server-release" >> $GITHUB_ENV
+            echo "BRANCH_NAME=chore-update-proto" >> $GITHUB_ENV
           fi
 
       # 2. 古いブランチとプルリクエストの整理
