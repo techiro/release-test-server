@@ -6,6 +6,7 @@ on:
       - 'release-server.md'
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   notify-main-repo:
