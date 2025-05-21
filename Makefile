@@ -1,0 +1,16 @@
+# techiro/release-test リポジトリ用の Makefile
+
+.PHONY: sync server-release
+
+# サーバーリリース情報を同期
+sync:
+	@echo "リポジトリリソースを同期中..."
+
+# サーバーリポジトリから最新の release-server.md を取得
+server-release:
+	@echo "サーバーリリース情報を取得中..."
+	curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+		-H "Accept: application/vnd.github.v3.raw" \
+		-o release-server.md \
+		https://api.github.com/repos/techiro/release-test-server/contents/release-server.md
+	@echo "サーバーリリース情報が更新されました。"
