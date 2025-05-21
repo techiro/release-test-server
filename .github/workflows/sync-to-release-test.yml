@@ -63,6 +63,8 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v1
         with:
+          app-id: ${{ vars.RELEASE_TEST_APP_ID }}
+          private-key: ${{ secrets.RELEASE_TEST_PRIVATE_KEY }}
           owner: techiro
           repositories: release-test,release-test-server
 
