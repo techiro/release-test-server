@@ -65,7 +65,7 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: techiro/release-test
           event-type: server-release-updated
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
+          client-payload: '{"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
 
       - name: repository_dispatchイベントをトリガー(server)
         uses: peter-evans/repository-dispatch@v2
@@ -73,4 +73,4 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: techiro/release-test-server
           event-type: server-release-updated
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
+          client-payload: '{"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
