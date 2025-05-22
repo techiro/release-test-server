@@ -63,10 +63,17 @@ jobs:
         id: get_sha
         run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
+      - name: GitHub App トークンを生成
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.RELEASE_INTEGRATION_APP_ID }}
+          private-key: ${{ secrets.RELEASE_INTEGRATION_APP_PRIVATE_KEY }}
+
       - name: repository_dispatchイベントをトリガー
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           repository: techiro/release-test
           event-type: server-release-updated
           client-payload: |
@@ -75,7 +82,7 @@ jobs:
       - name: repository_dispatchイベントをトリガー(server)
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           repository: techiro/release-test-server
           event-type: server-release-updated
           client-payload: |
