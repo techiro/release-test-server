@@ -1,4 +1,4 @@
-name: サーバーリリースをメインリポジトリに同期
+name: Execute Repository Dispatch
 
 on:
   push:
@@ -59,13 +59,18 @@ jobs:
           git commit -m "手動トリガーによる更新"
           git push
 
+      - name: 最新コミットSHAを取得
+        id: get_sha
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: repository_dispatchイベントをトリガー
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: techiro/release-test
           event-type: server-release-updated
-          client-payload: '{"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
+          client-payload: |
+            {"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ steps.get_sha.outputs.sha }}", "message": "${{ github.event.inputs.update_note }}"}
 
       - name: repository_dispatchイベントをトリガー(server)
         uses: peter-evans/repository-dispatch@v2
@@ -73,4 +78,5 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: techiro/release-test-server
           event-type: server-release-updated
-          client-payload: '{"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "message": "${{ github.event.inputs.update_note }}"}'
+          client-payload: |
+            {"repository": "${{github.repository}}","ref": "${{ github.ref }}", "sha": "${{ steps.get_sha.outputs.sha }}", "message": "${{ github.event.inputs.update_note }}"}
