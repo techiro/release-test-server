@@ -69,6 +69,7 @@ jobs:
         with:
           app-id: ${{ vars.RELEASE_INTEGRATION_APP_ID }}
           private-key: ${{ secrets.RELEASE_INTEGRATION_APP_PRIVATE_KEY }}
+          owner: techiro
 
       - name: repository_dispatchイベントをトリガー
         uses: peter-evans/repository-dispatch@v2
